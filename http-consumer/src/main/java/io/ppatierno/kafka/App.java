@@ -36,6 +36,7 @@ public final class App {
                     log.info("HTTP Kafka consumer started successfully");
                 } else {
                     log.error("Failed to deploy HTTP Kafka consumer", done.cause());
+                    System.exit(1);
                 }
             });
         });
