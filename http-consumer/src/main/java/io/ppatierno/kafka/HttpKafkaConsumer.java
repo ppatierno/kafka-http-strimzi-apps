@@ -95,7 +95,7 @@ public class HttpKafkaConsumer extends AbstractVerticle {
         JsonObject topics = new JsonObject()
             .put("topics", new JsonArray().add(topic));
         
-        this.client.post(consumer.baseUri + "/subscription")
+        this.client.post(consumer.getBaseUri() + "/subscription")
             .putHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(topics.toBuffer().length()))
             .putHeader(HttpHeaderNames.CONTENT_TYPE.toString(), "application/vnd.kafka.v2+json")
             .as(BodyCodec.jsonObject())
@@ -119,7 +119,7 @@ public class HttpKafkaConsumer extends AbstractVerticle {
         Future<List<ConsumerRecord>> fut = Future.future();        
 
         log.info("Poll ...");
-        this.client.get(consumer.baseUri + "/records?timeout=" + 1000)
+        this.client.get(this.consumer.getBaseUri() + "/records")
             .putHeader(HttpHeaderNames.ACCEPT.toString(), "application/vnd.kafka.json.v2+json")
             .as(BodyCodec.jsonArray())
             .send(ar -> {
@@ -131,8 +131,8 @@ public class HttpKafkaConsumer extends AbstractVerticle {
                             JsonObject json = (JsonObject) obj;
                             list.add(new ConsumerRecord(
                                 json.getString("topic"), 
-                                json.getString("key"), 
-                                json.getString("value"), 
+                                json.getValue("key"),
+                                json.getValue("value"),
                                 json.getInteger("partition"), 
                                 json.getLong("offset"))
                                 );
@@ -190,12 +190,12 @@ public class HttpKafkaConsumer extends AbstractVerticle {
     class ConsumerRecord {
 
         private final String topic;
-        private final String key;
-        private final String value;
+        private final Object key;
+        private final Object value;
         private final int partition;
         private final long offset;
 
-        ConsumerRecord(String topic, String key, String value, int partition, long offset) {
+        ConsumerRecord(String topic, Object key, Object value, int partition, long offset) {
             this.topic = topic;
             this.key = key;
             this.value = value;
@@ -213,14 +213,14 @@ public class HttpKafkaConsumer extends AbstractVerticle {
         /**
          * @return the message key
          */
-        public String getKey() {
+        public Object getKey() {
             return key;
         }
 
         /**
          * @return the message value
          */
-        public String getValue() {
+        public Object getValue() {
             return value;
         }
 
