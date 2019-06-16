@@ -15,7 +15,7 @@ public class HttpKafkaConsumerConfig {
 
     private static final String DEFAULT_HOSTNAME = "localhost";
     private static final int DEFAULT_PORT = 8080;
-    private static final String DEFAULT_TOPIC = "my-topic";
+    private static final String DEFAULT_TOPIC = "test";
     private static final String DEFAULT_GROUPID = "my-group";
     private static final int DEFAULT_POLL_INTERVAL = 1000;
 

@@ -1,5 +1,8 @@
 package io.ppatierno.kafka;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +48,16 @@ public class HttpKafkaConsumer extends AbstractVerticle {
         
         this.createConsumer()
         .compose(consumer -> this.subscribe(consumer, this.config.getTopic()))
-        .compose(startFuture::complete, startFuture);
+        .compose(v -> {
+            vertx.setPeriodic(this.config.getPollInterval(), t -> {
+                this.poll().setHandler(ar -> {
+                    if (ar.succeeded()) {
+                        log.info("Received {}", ar.result());
+                    }
+                });
+            });
+            startFuture.complete();
+        }, startFuture);
     }
 
     private Future<CreatedConsumer> createConsumer() {
@@ -103,6 +115,39 @@ public class HttpKafkaConsumer extends AbstractVerticle {
         return fut;
     }
 
+    private Future<List<ConsumerRecord>> poll() {
+        Future<List<ConsumerRecord>> fut = Future.future();        
+
+        log.info("Poll ...");
+        this.client.get(consumer.baseUri + "/records?timeout=" + 1000)
+            .putHeader(HttpHeaderNames.ACCEPT.toString(), "application/vnd.kafka.json.v2+json")
+            .as(BodyCodec.jsonArray())
+            .send(ar -> {
+                if (ar.succeeded()) {
+                    HttpResponse<JsonArray> response = ar.result();
+                    if (response.statusCode() == HttpResponseStatus.OK.code()) {
+                        List<ConsumerRecord> list = new ArrayList<>();
+                        response.body().forEach(obj -> {
+                            JsonObject json = (JsonObject) obj;
+                            list.add(new ConsumerRecord(
+                                json.getString("topic"), 
+                                json.getString("key"), 
+                                json.getString("value"), 
+                                json.getInteger("partition"), 
+                                json.getLong("offset"))
+                                );
+                        });
+                        fut.complete(list);
+                    } else {
+                        fut.fail(new RuntimeException("Got HTTP status code " + response.statusCode()));
+                    }
+                } else {
+                    fut.fail(ar.cause());
+                }
+            });
+        return fut;
+    }
+
     /**
      * Information about using the consumer on the bridge
      */
@@ -135,6 +180,72 @@ public class HttpKafkaConsumer extends AbstractVerticle {
             return "CreatedConsumer(" +
                     "instanceId=" + this.instanceId +
                     ",baseUri=" + this.baseUri +
+                    ")";
+        }
+    }
+
+    /**
+     * Represents a consumed record
+     */
+    class ConsumerRecord {
+
+        private final String topic;
+        private final String key;
+        private final String value;
+        private final int partition;
+        private final long offset;
+
+        ConsumerRecord(String topic, String key, String value, int partition, long offset) {
+            this.topic = topic;
+            this.key = key;
+            this.value = value;
+            this.partition = partition;
+            this.offset = offset;
+        }
+
+        /**
+         * @return topic from which the message was consumed
+         */
+        public String getTopic() {
+            return topic;
+        }
+
+        /**
+         * @return the message key
+         */
+        public String getKey() {
+            return key;
+        }
+
+        /**
+         * @return the message value
+         */
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * @return the topic partition from which the message was consumed
+         */
+        public int getPartition() {
+            return partition;
+        }
+
+        /**
+         * @return the message offset in the partition
+         */
+        public long getOffset() {
+            return offset;
+        }
+
+        @Override
+        public String toString() {
+            return "ConsumerRecord(" +
+                    "topic=" + this.topic +
+                    ",key=" + this.key +
+                    ",value=" + this.value +
+                    ",partition=" + this.partition +
+                    ",offset=" + this.offset +
                     ")";
         }
     }
