@@ -12,18 +12,21 @@ public class HttpKafkaConsumerConfig {
     private static final String ENV_TOPIC = "TOPIC";
     private static final String ENV_GROUPID = "GROUPID";
     private static final String ENV_POLL_INTERVAL = "POLL_INTERVAL";
+    private static final String ENV_POLL_TIMEOUT = "POLL_TIMEOUT";
 
     private static final String DEFAULT_HOSTNAME = "localhost";
     private static final int DEFAULT_PORT = 8080;
     private static final String DEFAULT_TOPIC = "test";
     private static final String DEFAULT_GROUPID = "my-group";
     private static final int DEFAULT_POLL_INTERVAL = 1000;
+    private static final int DEFAULT_POLL_TIMEOUT = 100;
 
     private final String hostname;
     private final int port;
     private final String topic;
     private final String groupid;
     private final int pollInterval;
+    private final int pollTimeout;
 
     /**
      * Constructor
@@ -33,13 +36,15 @@ public class HttpKafkaConsumerConfig {
      * @param topic Kafka topic from which consume messages
      * @param groupid consumer group name the consumer belong to
      * @param pollInterval interval (in ms) for polling to get messages
+     * @param pollTimeout timeout (in ms) for polling to get messages
      */
-    private HttpKafkaConsumerConfig(String hostname, int port, String topic, String groupid, int pollInterval) {
+    private HttpKafkaConsumerConfig(String hostname, int port, String topic, String groupid, int pollInterval, int pollTimeout) {
         this.hostname = hostname;
         this.port = port;
         this.topic = topic;
         this.groupid = groupid;
         this.pollInterval = pollInterval;
+        this.pollTimeout = pollTimeout;
     }
 
     /**
@@ -78,6 +83,13 @@ public class HttpKafkaConsumerConfig {
     }
 
     /**
+     * @return timeout (in ms) for polling to get messages
+     */
+    public int getPollTimeout() {
+        return pollTimeout;
+    }
+
+    /**
      * Load all HTTP Kafka consumer configuration parameters from a related map
      * 
      * @param map map from which loading configuration parameters
@@ -89,7 +101,8 @@ public class HttpKafkaConsumerConfig {
         String topic = (String) map.getOrDefault(ENV_TOPIC, DEFAULT_TOPIC);
         String groupid = (String) map.getOrDefault(ENV_GROUPID, DEFAULT_GROUPID);
         int pollInterval = (Integer) map.getOrDefault(ENV_POLL_INTERVAL, DEFAULT_POLL_INTERVAL);
-        return new HttpKafkaConsumerConfig(hostname, port, topic, groupid, pollInterval);
+        int pollTimeout = (Integer) map.getOrDefault(ENV_POLL_TIMEOUT, DEFAULT_POLL_TIMEOUT);
+        return new HttpKafkaConsumerConfig(hostname, port, topic, groupid, pollInterval, pollTimeout);
     }
 
     @Override
@@ -100,6 +113,7 @@ public class HttpKafkaConsumerConfig {
                 ",topic=" + this.topic +
                 ",groupid=" + this.groupid +
                 ",pollInterval=" + this.pollInterval +
+                ",pollTimeout=" + this.pollTimeout +
                 ")";
     }
 }

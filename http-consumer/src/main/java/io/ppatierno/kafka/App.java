@@ -53,7 +53,9 @@ public final class App {
                 CountDownLatch latch = new CountDownLatch(1);
                 vertx.undeploy(deploymentId, v -> latch.countDown());
                 try {
-                    latch.await(10000, TimeUnit.MILLISECONDS);
+                    if (!latch.await(60000, TimeUnit.MILLISECONDS)) {
+                        log.info("App exiting for timeout on undeploy verticle");
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } finally {

@@ -134,7 +134,7 @@ public class HttpKafkaConsumer extends AbstractVerticle {
         Future<List<ConsumerRecord>> fut = Future.future();        
 
         log.info("Poll ...");
-        this.client.get(this.consumer.getBaseUri() + "/records")
+        this.client.get(this.consumer.getBaseUri() + "/records?timeout=" + this.config.getPollTimeout())
             .putHeader(HttpHeaderNames.ACCEPT.toString(), "application/vnd.kafka.json.v2+json")
             .as(BodyCodec.jsonArray())
             .send(ar -> {
