@@ -28,6 +28,7 @@ public class HttpKafkaConsumer extends AbstractVerticle {
 
     private WebClient client;
     private CreatedConsumer consumer;
+    private long pollTimer;
 
     /**
      * Constructor
@@ -41,6 +42,7 @@ public class HttpKafkaConsumer extends AbstractVerticle {
     @Override
     public void start(Future<Void> startFuture) throws Exception {
         log.info("HTTP Kafka consumer starting with config {}", this.config);
+
         WebClientOptions options = new WebClientOptions()
                 .setDefaultHost(this.config.getHostname())
                 .setDefaultPort(this.config.getPort());
@@ -49,7 +51,7 @@ public class HttpKafkaConsumer extends AbstractVerticle {
         this.createConsumer()
         .compose(consumer -> this.subscribe(consumer, this.config.getTopic()))
         .compose(v -> {
-            vertx.setPeriodic(this.config.getPollInterval(), t -> {
+            this.pollTimer = vertx.setPeriodic(this.config.getPollInterval(), t -> {
                 this.poll().setHandler(ar -> {
                     if (ar.succeeded()) {
                         log.info("Received {}", ar.result());
@@ -58,6 +60,19 @@ public class HttpKafkaConsumer extends AbstractVerticle {
             });
             startFuture.complete();
         }, startFuture);
+    }
+
+    @Override
+    public void stop(Future<Void> stopFuture) throws Exception {
+        log.info("HTTP Kafka consumer stopping");
+        if (this.consumer != null) {
+            this.vertx.cancelTimer(this.pollTimer);
+            this.deleteConsumer().setHandler(ar -> {
+                stopFuture.complete();
+            });
+        } else {
+            stopFuture.complete();
+        }
     }
 
     private Future<CreatedConsumer> createConsumer() {
@@ -141,6 +156,28 @@ public class HttpKafkaConsumer extends AbstractVerticle {
                     } else {
                         fut.fail(new RuntimeException("Got HTTP status code " + response.statusCode()));
                     }
+                } else {
+                    fut.fail(ar.cause());
+                }
+            });
+        return fut;
+    }
+
+    private Future<Void> deleteConsumer() {
+        Future<Void> fut = Future.future();
+
+        this.client.delete(this.consumer.getBaseUri())
+            .putHeader(HttpHeaderNames.CONTENT_TYPE.toString(), "application/vnd.kafka.v2+json")
+            .as(BodyCodec.jsonObject())
+            .send(ar -> {
+                if (ar.succeeded()) {
+                    HttpResponse<JsonObject> response = ar.result();
+                    if (response.statusCode() == HttpResponseStatus.NO_CONTENT.code()) {
+                        log.info("Consumer {} deleted", this.consumer.getInstanceId());
+                        fut.complete();
+                    } else {
+                        fut.fail(new RuntimeException("Got HTTP status code " + response.statusCode()));
+                    } 
                 } else {
                     fut.fail(ar.cause());
                 }
