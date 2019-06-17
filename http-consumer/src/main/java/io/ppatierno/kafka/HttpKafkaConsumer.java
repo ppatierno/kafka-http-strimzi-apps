@@ -167,7 +167,7 @@ public class HttpKafkaConsumer extends AbstractVerticle {
         Future<Void> fut = Future.future();
 
         this.client.delete(this.consumer.getBaseUri())
-            .putHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), "application/vnd.kafka.v2+json")
+            .putHeader(HttpHeaderNames.CONTENT_TYPE.toString(), "application/vnd.kafka.v2+json")
             .as(BodyCodec.jsonObject())
             .send(ar -> {
                 if (ar.succeeded()) {

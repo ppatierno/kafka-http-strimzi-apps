@@ -53,9 +53,7 @@ public final class App {
                 CountDownLatch latch = new CountDownLatch(1);
                 vertx.undeploy(deploymentId, v -> latch.countDown());
                 try {
-                    log.info("waiting...");
-                    latch.await(60000, TimeUnit.MILLISECONDS);
-                    log.info("...done");
+                    latch.await(10000, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } finally {
