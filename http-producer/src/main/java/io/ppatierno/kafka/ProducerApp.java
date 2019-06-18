@@ -13,10 +13,10 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-public final class App {
-
-    private static final Logger log = LoggerFactory.getLogger(App.class);
+public final class ProducerApp {
     
+    private static final Logger log = LoggerFactory.getLogger(ProducerApp.class);
+
     private static String deploymentId;
 
     public static void main(String[] args) {
@@ -33,16 +33,16 @@ public final class App {
 
         retriever.getConfig(ar -> {
             Map<String, Object> envConfig = ar.result().getMap();
-            HttpKafkaConsumerConfig httpKafkaConsumerConfig = HttpKafkaConsumerConfig.fromMap(envConfig);
+            HttpKafkaProducerConfig httpKafkaConsumerConfig = HttpKafkaProducerConfig.fromMap(envConfig);
 
-            HttpKafkaConsumer httpKafkaConsumer = new HttpKafkaConsumer(httpKafkaConsumerConfig);
+            HttpKafkaProducer httpKafkaProducer = new HttpKafkaProducer(httpKafkaConsumerConfig);
 
-            vertx.deployVerticle(httpKafkaConsumer, done -> {
+            vertx.deployVerticle(httpKafkaProducer, done -> {
                 if (done.succeeded()) {
                     deploymentId = done.result();
-                    log.info("HTTP Kafka consumer started successfully");
+                    log.info("HTTP Kafka producer started successfully");
                 } else {
-                    log.error("Failed to deploy HTTP Kafka consumer", done.cause());
+                    log.error("Failed to deploy HTTP Kafka producer", done.cause());
                     System.exit(1);
                 }
             });
