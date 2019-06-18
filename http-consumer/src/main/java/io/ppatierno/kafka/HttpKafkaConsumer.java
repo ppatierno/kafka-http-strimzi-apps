@@ -45,7 +45,9 @@ public class HttpKafkaConsumer extends AbstractVerticle {
 
         WebClientOptions options = new WebClientOptions()
                 .setDefaultHost(this.config.getHostname())
-                .setDefaultPort(this.config.getPort());
+                .setDefaultPort(this.config.getPort())
+                .setPipelining(this.config.isPipelining())
+                .setPipeliningLimit(this.config.getPipeliningLimit());
         this.client = WebClient.create(vertx, options);
         
         this.createConsumer()

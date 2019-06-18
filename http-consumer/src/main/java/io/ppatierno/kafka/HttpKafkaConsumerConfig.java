@@ -2,6 +2,8 @@ package io.ppatierno.kafka;
 
 import java.util.Map;
 
+import io.vertx.core.http.HttpClientOptions;
+
 /**
  * HttpKafkaConsumerConfig
  */
@@ -13,6 +15,8 @@ public class HttpKafkaConsumerConfig {
     private static final String ENV_GROUPID = "GROUPID";
     private static final String ENV_POLL_INTERVAL = "POLL_INTERVAL";
     private static final String ENV_POLL_TIMEOUT = "POLL_TIMEOUT";
+    private static final String ENV_PIPELINING = "PIPELINING";
+    private static final String ENV_PIPELINING_LIMIT = "PIPELINING_LIMIT";
 
     private static final String DEFAULT_HOSTNAME = "localhost";
     private static final int DEFAULT_PORT = 8080;
@@ -20,6 +24,8 @@ public class HttpKafkaConsumerConfig {
     private static final String DEFAULT_GROUPID = "my-group";
     private static final int DEFAULT_POLL_INTERVAL = 1000;
     private static final int DEFAULT_POLL_TIMEOUT = 100;
+    private static final boolean DEFAULT_PIPELINING = HttpClientOptions.DEFAULT_PIPELINING;
+    private static final int DEFAULT_PIPELINING_LIMIT = HttpClientOptions.DEFAULT_PIPELINING_LIMIT;
 
     private final String hostname;
     private final int port;
@@ -27,6 +33,8 @@ public class HttpKafkaConsumerConfig {
     private final String groupid;
     private final int pollInterval;
     private final int pollTimeout;
+    private final boolean pipelining;
+    private final int pipeliningLimit;
 
     /**
      * Constructor
@@ -37,14 +45,21 @@ public class HttpKafkaConsumerConfig {
      * @param groupid consumer group name the consumer belong to
      * @param pollInterval interval (in ms) for polling to get messages
      * @param pollTimeout timeout (in ms) for polling to get messages
+     * @param pipelining if the HTTP client has to pipeline requests
+     * @param pipeliningLimit the maximum number of requests in the pipeline
      */
-    private HttpKafkaConsumerConfig(String hostname, int port, String topic, String groupid, int pollInterval, int pollTimeout) {
+    private HttpKafkaConsumerConfig(String hostname, int port, 
+                                    String topic, String groupid, 
+                                    int pollInterval, int pollTimeout,
+                                    boolean pipelining, int pipeliningLimit) {
         this.hostname = hostname;
         this.port = port;
         this.topic = topic;
         this.groupid = groupid;
         this.pollInterval = pollInterval;
         this.pollTimeout = pollTimeout;
+        this.pipelining = pipelining;
+        this.pipeliningLimit = pipeliningLimit;
     }
 
     /**
@@ -90,6 +105,20 @@ public class HttpKafkaConsumerConfig {
     }
 
     /**
+     * @return if the HTTP client has to pipeline requests
+     */
+    public boolean isPipelining() {
+        return pipelining;
+    }
+
+    /**
+     * @return the maximum number of requests in the pipeline
+     */
+    public int getPipeliningLimit() {
+        return pipeliningLimit;
+    }
+
+    /**
      * Load all HTTP Kafka consumer configuration parameters from a related map
      * 
      * @param map map from which loading configuration parameters
@@ -102,7 +131,9 @@ public class HttpKafkaConsumerConfig {
         String groupid = (String) map.getOrDefault(ENV_GROUPID, DEFAULT_GROUPID);
         int pollInterval = Integer.parseInt(map.getOrDefault(ENV_POLL_INTERVAL, DEFAULT_POLL_INTERVAL).toString());
         int pollTimeout = Integer.parseInt(map.getOrDefault(ENV_POLL_TIMEOUT, DEFAULT_POLL_TIMEOUT).toString());
-        return new HttpKafkaConsumerConfig(hostname, port, topic, groupid, pollInterval, pollTimeout);
+        boolean pipelining = Boolean.valueOf(map.getOrDefault(ENV_PIPELINING, DEFAULT_PIPELINING).toString());
+        int pipeliningLimit = Integer.parseInt(map.getOrDefault(ENV_PIPELINING_LIMIT, DEFAULT_PIPELINING_LIMIT).toString());
+        return new HttpKafkaConsumerConfig(hostname, port, topic, groupid, pollInterval, pollTimeout, pipelining, pipeliningLimit);
     }
 
     @Override
@@ -114,6 +145,8 @@ public class HttpKafkaConsumerConfig {
                 ",groupid=" + this.groupid +
                 ",pollInterval=" + this.pollInterval +
                 ",pollTimeout=" + this.pollTimeout +
+                ",pipelining=" + this.pipelining + 
+                ",pipeliningLimit=" + this.pipeliningLimit +
                 ")";
     }
 }
