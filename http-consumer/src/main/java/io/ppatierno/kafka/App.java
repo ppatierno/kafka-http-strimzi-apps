@@ -11,6 +11,7 @@ import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 
 public final class App {
 
@@ -22,7 +23,8 @@ public final class App {
         Vertx vertx = Vertx.vertx();
 
         ConfigStoreOptions envStore = new ConfigStoreOptions()
-                .setType("env");
+                .setType("env")
+                .setConfig(new JsonObject().put("raw-data", true));
 
         ConfigRetrieverOptions options = new ConfigRetrieverOptions()
                 .addStore(envStore);

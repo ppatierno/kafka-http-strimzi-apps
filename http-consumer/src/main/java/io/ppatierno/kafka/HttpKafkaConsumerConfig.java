@@ -97,11 +97,11 @@ public class HttpKafkaConsumerConfig {
      */
     public static HttpKafkaConsumerConfig fromMap(Map<String, Object> map) {
         String hostname = (String) map.getOrDefault(ENV_HOSTNAME, DEFAULT_HOSTNAME);
-        int port = (Integer) map.getOrDefault(ENV_PORT, DEFAULT_PORT);
+        int port = Integer.parseInt(map.getOrDefault(ENV_PORT, DEFAULT_PORT).toString());
         String topic = (String) map.getOrDefault(ENV_TOPIC, DEFAULT_TOPIC);
         String groupid = (String) map.getOrDefault(ENV_GROUPID, DEFAULT_GROUPID);
-        int pollInterval = (Integer) map.getOrDefault(ENV_POLL_INTERVAL, DEFAULT_POLL_INTERVAL);
-        int pollTimeout = (Integer) map.getOrDefault(ENV_POLL_TIMEOUT, DEFAULT_POLL_TIMEOUT);
+        int pollInterval = Integer.parseInt(map.getOrDefault(ENV_POLL_INTERVAL, DEFAULT_POLL_INTERVAL).toString());
+        int pollTimeout = Integer.parseInt(map.getOrDefault(ENV_POLL_TIMEOUT, DEFAULT_POLL_TIMEOUT).toString());
         return new HttpKafkaConsumerConfig(hostname, port, topic, groupid, pollInterval, pollTimeout);
     }
 
