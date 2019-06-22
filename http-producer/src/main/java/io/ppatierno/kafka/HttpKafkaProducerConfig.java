@@ -1,6 +1,7 @@
 package io.ppatierno.kafka;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * HttpKafkaProducerConfig
@@ -11,16 +12,19 @@ public class HttpKafkaProducerConfig {
     private static final String ENV_PORT = "PORT";
     private static final String ENV_TOPIC = "TOPIC";
     private static final String ENV_SEND_INTERVAL = "SEND_INTERVAL";
+    private static final String ENV_MESSAGE_COUNT = "MESSAGE_COUNT";
 
     private static final String DEFAULT_HOSTNAME = "localhost";
     private static final int DEFAULT_PORT = 8080;
     private static final String DEFAULT_TOPIC = "test";
     private static final int DEFAULT_SEND_INTERVAL = 1000;
 
+
     private final String hostname;
     private final int port;
     private final String topic;
     private final int sendInterval;
+    private final Optional<Long> messageCount; 
 
     /**
      * Constructor
@@ -29,13 +33,16 @@ public class HttpKafkaProducerConfig {
      * @param port host port to which connect to
      * @param topic Kafka topic from which consume messages
      * @param sendInterval interval (in ms) for sending messages
+     * @param messageCount number of messages to sent
      */
     private HttpKafkaProducerConfig(String hostname, int port, 
-                                    String topic, int sendInterval) {
+                                    String topic, int sendInterval,
+                                    Optional<Long> messageCount) {
         this.hostname = hostname;
         this.port = port;
         this.topic = topic;
         this.sendInterval = sendInterval;
+        this.messageCount = messageCount;
     }
 
     /**
@@ -67,6 +74,13 @@ public class HttpKafkaProducerConfig {
     }
 
     /**
+     * @return number of messages to sent
+     */
+    public Optional<Long> getMessageCount() {
+        return messageCount;
+    }
+
+    /**
      * Load all HTTP Kafka producer configuration parameters from a related map
      * 
      * @param map map from which loading configuration parameters
@@ -77,7 +91,9 @@ public class HttpKafkaProducerConfig {
         int port = Integer.parseInt(map.getOrDefault(ENV_PORT, DEFAULT_PORT).toString());
         String topic = (String) map.getOrDefault(ENV_TOPIC, DEFAULT_TOPIC);
         int sendInterval = Integer.parseInt(map.getOrDefault(ENV_SEND_INTERVAL, DEFAULT_SEND_INTERVAL).toString());
-        return new HttpKafkaProducerConfig(hostname, port, topic, sendInterval);
+        String envMessageCount = (String) map.get(ENV_MESSAGE_COUNT);
+        Optional<Long> messageCount = envMessageCount != null ? Optional.of((Long.parseLong(envMessageCount))) : Optional.empty();
+        return new HttpKafkaProducerConfig(hostname, port, topic, sendInterval, messageCount);
     }
 
     @Override
@@ -87,6 +103,7 @@ public class HttpKafkaProducerConfig {
                 ",port=" + this.port +
                 ",topic=" + this.topic +
                 ",sendInterval=" + this.sendInterval +
+                ",messageCount=" + (this.messageCount.isPresent() ? this.messageCount.get() : null) +
                 ")";
     }
 }
