@@ -94,6 +94,11 @@ public class HttpKafkaProducer extends AbstractVerticle {
                 } else {
                     fut.fail(ar.cause());
                 }
+
+                if (this.config.getMessageCount().isPresent() &&
+                    this.messagesSent >= this.config.getMessageCount().get()) {
+                        this.vertx.close(done -> System.exit(0));
+                }
             });
         return fut;
     }
