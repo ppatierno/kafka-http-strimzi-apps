@@ -25,3 +25,10 @@ spec:
             value: "my-group"
           - name: POLL_INTERVAL
             value: "1000"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
