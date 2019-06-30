@@ -1,6 +1,7 @@
 package io.ppatierno.kafka;
 
 import java.util.Map;
+import java.util.Optional;
 
 import io.vertx.core.http.HttpClientOptions;
 
@@ -17,6 +18,7 @@ public class HttpKafkaConsumerConfig {
     private static final String ENV_POLL_TIMEOUT = "POLL_TIMEOUT";
     private static final String ENV_PIPELINING = "PIPELINING";
     private static final String ENV_PIPELINING_LIMIT = "PIPELINING_LIMIT";
+    private static final String ENV_MESSAGE_COUNT = "MESSAGE_COUNT";
 
     private static final String DEFAULT_HOSTNAME = "localhost";
     private static final int DEFAULT_PORT = 8080;
@@ -35,6 +37,7 @@ public class HttpKafkaConsumerConfig {
     private final int pollTimeout;
     private final boolean pipelining;
     private final int pipeliningLimit;
+    private final Optional<Long> messageCount; 
 
     /**
      * Constructor
@@ -47,11 +50,13 @@ public class HttpKafkaConsumerConfig {
      * @param pollTimeout timeout (in ms) for polling to get messages
      * @param pipelining if the HTTP client has to pipeline requests
      * @param pipeliningLimit the maximum number of requests in the pipeline
+     * @param messageCount number of messages to receive
      */
     private HttpKafkaConsumerConfig(String hostname, int port, 
                                     String topic, String groupid, 
                                     int pollInterval, int pollTimeout,
-                                    boolean pipelining, int pipeliningLimit) {
+                                    boolean pipelining, int pipeliningLimit,
+                                    Optional<Long> messageCount) {
         this.hostname = hostname;
         this.port = port;
         this.topic = topic;
@@ -60,6 +65,7 @@ public class HttpKafkaConsumerConfig {
         this.pollTimeout = pollTimeout;
         this.pipelining = pipelining;
         this.pipeliningLimit = pipeliningLimit;
+        this.messageCount = messageCount;
     }
 
     /**
@@ -119,6 +125,13 @@ public class HttpKafkaConsumerConfig {
     }
 
     /**
+     * @return number of messages to receive
+     */
+    public Optional<Long> getMessageCount() {
+        return messageCount;
+    }
+
+    /**
      * Load all HTTP Kafka consumer configuration parameters from a related map
      * 
      * @param map map from which loading configuration parameters
@@ -133,7 +146,9 @@ public class HttpKafkaConsumerConfig {
         int pollTimeout = Integer.parseInt(map.getOrDefault(ENV_POLL_TIMEOUT, DEFAULT_POLL_TIMEOUT).toString());
         boolean pipelining = Boolean.valueOf(map.getOrDefault(ENV_PIPELINING, DEFAULT_PIPELINING).toString());
         int pipeliningLimit = Integer.parseInt(map.getOrDefault(ENV_PIPELINING_LIMIT, DEFAULT_PIPELINING_LIMIT).toString());
-        return new HttpKafkaConsumerConfig(hostname, port, topic, groupid, pollInterval, pollTimeout, pipelining, pipeliningLimit);
+        String envMessageCount = (String) map.get(ENV_MESSAGE_COUNT);
+        Optional<Long> messageCount = envMessageCount != null ? Optional.of((Long.parseLong(envMessageCount))) : Optional.empty();
+        return new HttpKafkaConsumerConfig(hostname, port, topic, groupid, pollInterval, pollTimeout, pipelining, pipeliningLimit, messageCount);
     }
 
     @Override
@@ -147,6 +162,7 @@ public class HttpKafkaConsumerConfig {
                 ",pollTimeout=" + this.pollTimeout +
                 ",pipelining=" + this.pipelining + 
                 ",pipeliningLimit=" + this.pipeliningLimit +
+                ",messageCount=" + (this.messageCount.isPresent() ? this.messageCount.get() : null) +
                 ")";
     }
 }

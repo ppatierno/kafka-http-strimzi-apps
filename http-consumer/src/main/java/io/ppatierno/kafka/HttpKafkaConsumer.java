@@ -29,6 +29,7 @@ public class HttpKafkaConsumer extends AbstractVerticle {
     private WebClient client;
     private CreatedConsumer consumer;
     private long pollTimer;
+    private int messagesReceived;
 
     /**
      * Constructor
@@ -154,12 +155,18 @@ public class HttpKafkaConsumer extends AbstractVerticle {
                                 json.getLong("offset"))
                                 );
                         });
+                        this.messagesReceived += list.size();
                         fut.complete(list);
                     } else {
                         fut.fail(new RuntimeException("Got HTTP status code " + response.statusCode()));
                     }
                 } else {
                     fut.fail(ar.cause());
+                }
+
+                if (this.config.getMessageCount().isPresent() &&
+                    this.messagesReceived >= this.config.getMessageCount().get()) {
+                        this.vertx.close(done -> System.exit(0));
                 }
             });
         return fut;
