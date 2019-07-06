@@ -13,18 +13,21 @@ public class HttpKafkaProducerConfig {
     private static final String ENV_TOPIC = "TOPIC";
     private static final String ENV_SEND_INTERVAL = "SEND_INTERVAL";
     private static final String ENV_MESSAGE_COUNT = "MESSAGE_COUNT";
+    private static final String ENV_ENDPOINT_PREFIX = "ENDPOINT_PREFIX";
 
     private static final String DEFAULT_HOSTNAME = "localhost";
     private static final int DEFAULT_PORT = 8080;
     private static final String DEFAULT_TOPIC = "test";
     private static final int DEFAULT_SEND_INTERVAL = 1000;
+    private static final String DEFAULT_ENDPOINT_PREFIX = "";
 
 
     private final String hostname;
     private final int port;
     private final String topic;
     private final int sendInterval;
-    private final Optional<Long> messageCount; 
+    private final Optional<Long> messageCount;
+    private final String endpointPrefix;
 
     /**
      * Constructor
@@ -34,15 +37,18 @@ public class HttpKafkaProducerConfig {
      * @param topic Kafka topic from which consume messages
      * @param sendInterval interval (in ms) for sending messages
      * @param messageCount number of messages to sent
+     * @param endpointPrefix a prefix to use in the endpoint path
      */
     private HttpKafkaProducerConfig(String hostname, int port, 
                                     String topic, int sendInterval,
-                                    Optional<Long> messageCount) {
+                                    Optional<Long> messageCount,
+                                    String endpointPrefix) {
         this.hostname = hostname;
         this.port = port;
         this.topic = topic;
         this.sendInterval = sendInterval;
         this.messageCount = messageCount;
+        this.endpointPrefix = endpointPrefix;
     }
 
     /**
@@ -81,6 +87,13 @@ public class HttpKafkaProducerConfig {
     }
 
     /**
+     * @return a prefix to use in the endpoint path
+     */
+    public String getEndpointPrefix() {
+        return endpointPrefix;
+    }
+
+    /**
      * Load all HTTP Kafka producer configuration parameters from a related map
      * 
      * @param map map from which loading configuration parameters
@@ -93,7 +106,8 @@ public class HttpKafkaProducerConfig {
         int sendInterval = Integer.parseInt(map.getOrDefault(ENV_SEND_INTERVAL, DEFAULT_SEND_INTERVAL).toString());
         String envMessageCount = (String) map.get(ENV_MESSAGE_COUNT);
         Optional<Long> messageCount = envMessageCount != null ? Optional.of((Long.parseLong(envMessageCount))) : Optional.empty();
-        return new HttpKafkaProducerConfig(hostname, port, topic, sendInterval, messageCount);
+        String endpointPrefix = (String) map.getOrDefault(ENV_ENDPOINT_PREFIX, DEFAULT_ENDPOINT_PREFIX);
+        return new HttpKafkaProducerConfig(hostname, port, topic, sendInterval, messageCount, endpointPrefix);
     }
 
     @Override
@@ -104,6 +118,7 @@ public class HttpKafkaProducerConfig {
                 ",topic=" + this.topic +
                 ",sendInterval=" + this.sendInterval +
                 ",messageCount=" + (this.messageCount.isPresent() ? this.messageCount.get() : null) +
+                ",endpointPrefix=" + this.endpointPrefix +
                 ")";
     }
 }

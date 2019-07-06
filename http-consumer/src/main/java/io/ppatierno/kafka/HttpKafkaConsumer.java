@@ -85,7 +85,7 @@ public class HttpKafkaConsumer extends AbstractVerticle {
             .put("name", "my-consumer")
             .put("format", "json");
 
-        this.client.post("/consumers/" + this.config.getGroupid())
+        this.client.post(this.config.getEndpointPrefix() + "/consumers/" + this.config.getGroupid())
             .putHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(json.toBuffer().length()))
             .putHeader(HttpHeaderNames.CONTENT_TYPE.toString(), "application/vnd.kafka.v2+json")
             .as(BodyCodec.jsonObject())
