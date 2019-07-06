@@ -19,6 +19,7 @@ public class HttpKafkaConsumerConfig {
     private static final String ENV_PIPELINING = "PIPELINING";
     private static final String ENV_PIPELINING_LIMIT = "PIPELINING_LIMIT";
     private static final String ENV_MESSAGE_COUNT = "MESSAGE_COUNT";
+    private static final String ENV_ENDPOINT_PREFIX = "ENDPOINT_PREFIX";
 
     private static final String DEFAULT_HOSTNAME = "localhost";
     private static final int DEFAULT_PORT = 8080;
@@ -28,6 +29,7 @@ public class HttpKafkaConsumerConfig {
     private static final int DEFAULT_POLL_TIMEOUT = 100;
     private static final boolean DEFAULT_PIPELINING = HttpClientOptions.DEFAULT_PIPELINING;
     private static final int DEFAULT_PIPELINING_LIMIT = HttpClientOptions.DEFAULT_PIPELINING_LIMIT;
+    private static final String DEFAULT_ENDPOINT_PREFIX = "";
 
     private final String hostname;
     private final int port;
@@ -38,6 +40,7 @@ public class HttpKafkaConsumerConfig {
     private final boolean pipelining;
     private final int pipeliningLimit;
     private final Optional<Long> messageCount; 
+    private final String endpointPrefix;
 
     /**
      * Constructor
@@ -51,12 +54,14 @@ public class HttpKafkaConsumerConfig {
      * @param pipelining if the HTTP client has to pipeline requests
      * @param pipeliningLimit the maximum number of requests in the pipeline
      * @param messageCount number of messages to receive
+     * @param endpointPrefix a prefix to use in the endpoint path
      */
     private HttpKafkaConsumerConfig(String hostname, int port, 
                                     String topic, String groupid, 
                                     int pollInterval, int pollTimeout,
                                     boolean pipelining, int pipeliningLimit,
-                                    Optional<Long> messageCount) {
+                                    Optional<Long> messageCount,
+                                    String endpointPrefix) {
         this.hostname = hostname;
         this.port = port;
         this.topic = topic;
@@ -66,6 +71,7 @@ public class HttpKafkaConsumerConfig {
         this.pipelining = pipelining;
         this.pipeliningLimit = pipeliningLimit;
         this.messageCount = messageCount;
+        this.endpointPrefix = endpointPrefix;
     }
 
     /**
@@ -132,6 +138,13 @@ public class HttpKafkaConsumerConfig {
     }
 
     /**
+     * @return a prefix to use in the endpoint path
+     */
+    public String getEndpointPrefix() {
+        return endpointPrefix;
+    }
+
+    /**
      * Load all HTTP Kafka consumer configuration parameters from a related map
      * 
      * @param map map from which loading configuration parameters
@@ -148,7 +161,8 @@ public class HttpKafkaConsumerConfig {
         int pipeliningLimit = Integer.parseInt(map.getOrDefault(ENV_PIPELINING_LIMIT, DEFAULT_PIPELINING_LIMIT).toString());
         String envMessageCount = (String) map.get(ENV_MESSAGE_COUNT);
         Optional<Long> messageCount = envMessageCount != null ? Optional.of((Long.parseLong(envMessageCount))) : Optional.empty();
-        return new HttpKafkaConsumerConfig(hostname, port, topic, groupid, pollInterval, pollTimeout, pipelining, pipeliningLimit, messageCount);
+        String endpointPrefix = (String) map.getOrDefault(ENV_ENDPOINT_PREFIX, DEFAULT_ENDPOINT_PREFIX);
+        return new HttpKafkaConsumerConfig(hostname, port, topic, groupid, pollInterval, pollTimeout, pipelining, pipeliningLimit, messageCount, endpointPrefix);
     }
 
     @Override
@@ -163,6 +177,7 @@ public class HttpKafkaConsumerConfig {
                 ",pipelining=" + this.pipelining + 
                 ",pipeliningLimit=" + this.pipeliningLimit +
                 ",messageCount=" + (this.messageCount.isPresent() ? this.messageCount.get() : null) +
+                ",endpointPrefix=" + this.endpointPrefix +
                 ")";
     }
 }

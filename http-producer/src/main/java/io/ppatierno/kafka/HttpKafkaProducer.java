@@ -71,7 +71,7 @@ public class HttpKafkaProducer extends AbstractVerticle {
         JsonObject records = new JsonObject();
         records.put("records", new JsonArray().add(new JsonObject().put("value", "message-" + this.messagesSent++)));
 
-        this.client.post("/topics/" + topic)
+        this.client.post(this.config.getEndpointPrefix() + "/topics/" + topic)
             .putHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(records.toBuffer().length()))
             .putHeader(HttpHeaderNames.CONTENT_TYPE.toString(), "application/vnd.kafka.json.v2+json")
             .as(BodyCodec.jsonObject())
