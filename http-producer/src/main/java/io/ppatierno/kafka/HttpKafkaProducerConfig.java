@@ -66,7 +66,7 @@ public class HttpKafkaProducerConfig {
     }
 
     /**
-     * @return Kafka topic from which consume messages
+     * @return Kafka topic to send messages to
      */
     public String getTopic() {
         return topic;
